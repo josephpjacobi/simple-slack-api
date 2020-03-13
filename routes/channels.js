@@ -1,6 +1,6 @@
 const express = require('express');
 let router = express.Router();
-const db = require('../queries');
+const db = require('../queries/channels');
 
 router.route('/')
   .get(db.getChannels)

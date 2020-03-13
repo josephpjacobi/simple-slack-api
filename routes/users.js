@@ -1,6 +1,6 @@
 const express = require('express');
 let router = express.Router();
-const db = require('../queries');
+const db = require('../queries/users');
 
 router.route("/")
   .get(db.getUsers) 

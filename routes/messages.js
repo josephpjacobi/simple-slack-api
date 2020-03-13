@@ -1,6 +1,6 @@
 const express = require('express');
 let router = express.Router();
-const db = require('../queries');
+let db = require('../queries/messages');
 
 router.route('/')
   .get(db.getMessages)
