@@ -1,10 +1,10 @@
-const Pool = require('pg').Pool;
+const { Pool } = require('pg');
 const pool = new Pool({
-  user: 'me',
-  host: 'localhost',
-  database: 'simpleslackapi',
-  password: 'password',
-  port: 5432,
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_DATABASE,
+  password: process.env.DB_PASS,
+  port: process.env.DB_PORT,
 });
 
 const getUsers = (req, res) => {
@@ -31,21 +31,21 @@ const getUserById = (req, res) => {
 const createUser = (req, res) => {
   const {userName} = req.body;
 
-  pool.query('INSERT INTO users (userName) VALUES ($1)', [userName], (error, results) => {
+  pool.query('INSERT INTO users (userName) VALUES ($1) RETURNING userid', [userName], (error, results) => {
     if (error) {
       throw error
     }
-    res.status(201).send(`User added with ID: ${results}`)
+    res.status(201).send(`User added with ID: ${results.rows[0].userid}`)
   })
 };
 
 const updateUser = (req, res) => {
   const userID = parseInt(req.params.userID);
-  const {name} = req.body;
+  const {userName} = req.body;
 
   pool.query(
-    'UPDATE users SET name = $1 WHERE userID = $2',
-    [name, userID],
+    'UPDATE users SET userName = $1 WHERE userID = $2',
+    [userName, userID],
     (error, results) => {
       if (error) {
         throw error
@@ -89,14 +89,14 @@ const getChannelById = (req, res) => {
   })
 }
 
-const createChannel = (req, res) => {
+const createChannel = (req, res) => {  
   const { channelName } = req.body;
 
-  pool.query('INSERT INTO channels (channelName) VALUES ($1)', [channelName], (error, results) => {
+  pool.query('INSERT INTO channels (channelName) VALUES ($1) RETURNING channelid', [channelName], (error, results) => {
     if (error) {
       throw error
     }
-    res.status(201).send(`Channel added with ID ${results}`)
+    res.status(201).send(`Channel added with ID ${results.rows[0].channelid}`)
   })
 };
 
@@ -108,7 +108,7 @@ const updateChannel = (req, res) => {
     if (error) {
       throw error
     }
-    res.status(200).send(`Channel modified with channelID: ${results}`)
+    res.status(200).send(`Channel modified with channelID: ${channelID}`)
   })
 };
 
@@ -166,14 +166,14 @@ const getMessageByChannelId = (req, res) => {
 };
 
 const createMessage = (req, res) => {
-  const {postedByID, postedBy, channelID, channelName, content} = req.body;
-
-  pool.query('INSERT INTO messages (postedByID, postedBy, channelID, channelName, timestamp, content) VALUES ($1, $2, $3, $4, Now(), $5)',
+  const { postedByID, postedBy, channelID, channelName, content } = req.body;
+  
+  pool.query('INSERT INTO messages (postedbyid, postedby, channelid, channelname, timestamp, content) VALUES ($1, $2, $3, $4, Now(), $5) RETURNING messageid',
   [postedByID, postedBy, channelID, channelName, content], (error, results) => {
     if (error) {
       throw error
     }
-    res.status(201).send(`Message created with ID: ${results}`)
+    res.status(201).send(`Message created with ID: ${results.rows[0].messageid}`)
   })
 };
 
@@ -181,14 +181,25 @@ const updateMessage = (req, res) => {
   const messageID = parseInt(req.params.messageID);
   const { content } = req.body;
 
-  pool.query('UPDATE messages SET content = $1 WHERE messageID = $2', [content, messageID], (error, results) => {
+  pool.query('UPDATE messages SET content = $1 WHERE messageID = $2 RETURNING messageID', [content, messageID], (error, results) => {
     if (error) {
       throw error
     }
-    res.status(200).send(`Message modified with messageID: ${results}`)
+    console.log(results);
+    res.status(200).send(`Message modified with messageID: ${results.rows[0].messageid}`)
   })
-}
-// app.delete('/messages/:messageID', db.deleteMessageByID);
+};
+
+const deleteMessageByID = (req, res) => {
+  const messageID = parseInt(req.params.messageID);
+
+  pool.query('DELETE FROM messages WHERE messageID = $1', [messageID], (error, results) => {
+    if (error) {
+      throw error
+    }
+    res.status(200).send(`Deleted message with ID ${messageID}`)
+  })
+};
 
 module.exports = {
   getUsers,
@@ -206,5 +217,6 @@ module.exports = {
   getMessageByUserId,
   getMessageByChannelId,
   createMessage,
-  updateMessage
+  updateMessage,
+  deleteMessageByID
 }
