@@ -104,13 +104,18 @@ const updateMessage = (req, res) => {
 };
 
 const deleteMessageByID = (req, res) => {
-  const messageID = parseInt(req.params.messageID);
+  const { channelname, messageid } = req.body;
 
-  pool.query('DELETE FROM messages WHERE messageID = $1', [messageID], (error, results) => {
+  pool.query('DELETE FROM messages WHERE messageID = $1', [messageid], (error, results) => {
     if (error) {
       throw error
     }
-    res.status(200).send(`Deleted message with ID ${messageID}`)
+    const request = {
+      params: {
+        channelName: channelname
+      }
+    }
+    getMessagesByChannelName(request, res)
   })
 };
 
