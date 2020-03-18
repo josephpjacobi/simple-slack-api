@@ -5,11 +5,9 @@ let db = require('../queries/messages');
 router.route('/')
   .get(db.getMessages)
   .post(db.createMessage)
+  .put(db.updateMessage)
   .delete(db.deleteMessageByID);
 
-router.route('/:messageID')
-  .put(db.updateMessage);
-  
 router.route('/messages/:messageID')
   .get(db.getMessageById);
 

@@ -92,14 +92,18 @@ const createMessage = (req, res) => {
 };
 
 const updateMessage = (req, res) => {
-  const messageID = parseInt(req.params.messageID);
-  const { content } = req.body;
+  const { updatedContent, messageToUpdate } = req.body;
 
-  pool.query('UPDATE messages SET content = $1 WHERE messageID = $2 RETURNING messageID', [content, messageID], (error, results) => {
+  pool.query('UPDATE messages SET content = $1 WHERE messageID = $2', [updatedContent, messageToUpdate.messageid], (error, results) => {
     if (error) {
       throw error
     }
-    res.status(200).send(`Message modified with messageID: ${results.rows[0].messageid}`)
+    const request = {
+      params: {
+        channelName: messageToUpdate.channelname
+      }
+    }
+    getMessagesByChannelName(request, res)
   })
 };
 
