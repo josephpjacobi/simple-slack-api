@@ -19,5 +19,11 @@ router.route('/users/:userID')
 router.route('/channels/:channelID')
   .get(db.getMessageByChannelId);
 
+router.route('/channelname/:channelName')
+  .get(db.getMessagesByChannelName);
+
+router.route('/username/:username')
+  .get(db.getMessagesByUsername);
+
 
 module.exports = router;

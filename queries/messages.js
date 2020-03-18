@@ -49,16 +49,46 @@ const getMessageByChannelId = (req, res) => {
   })
 };
 
-const createMessage = (req, res) => {
-  const { postedByID, postedBy, channelID, channelName, content } = req.body;
+const getMessagesByChannelName = (req, res) => {
+  const { channelName } = req.params;
+  
+  pool.query('SELECT * FROM messages WHERE channelname = $1', [channelName], (error, results) => {
+    if (error) {
+      throw error
+    }
+    res.status(200).send(results.rows)
+  })
+};
 
-  pool.query('INSERT INTO messages (postedbyid, postedby, channelid, channelname, timestamp, content) VALUES ($1, $2, $3, $4, Now(), $5) RETURNING messageid',
-    [postedByID, postedBy, channelID, channelName, content], (error, results) => {
+const getMessagesByUsername = (req, res) => {
+  const { username } = req.params;
+
+  pool.query('SELECT * FROM messages WHERE postedby = $1', [username], (error, results) => {
+    if (error) {
+      throw error
+    }
+    res.status(200).send(results.rows)
+  })
+};
+
+const createMessage = (req, res) => {
+  const { postedbyid, postedby, channelid, channelname, content } = req.body;
+
+  pool.query(
+    "INSERT INTO messages (postedbyid, postedby, channelid, channelname, timestamp, content) VALUES ($1, $2, $3, $4, Now(), $5)",
+    [postedbyid, postedby, channelid, channelname, content],
+    (error, results) => {
       if (error) {
-        throw error
+        throw error;
       }
-      res.status(201).send(`Message created with ID: ${results.rows[0].messageid}`)
-    })
+      const request = {
+        params: {
+          channelName: channelname
+        }
+      };
+      getMessagesByChannelName(request, res);
+    }
+  );
 };
 
 const updateMessage = (req, res) => {
@@ -88,7 +118,9 @@ module.exports = {
   getMessages, 
   getMessageById, 
   getMessageByUserId, 
-  getMessageByChannelId, 
+  getMessageByChannelId,
+  getMessagesByChannelName, 
+  getMessagesByUsername,
   createMessage, 
   updateMessage, 
   deleteMessageByID
